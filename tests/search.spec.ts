@@ -5,17 +5,22 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('Realizar una busqueda que no tenga resultados', async ({ page }) => {
-  await page.getByRole('button').click();
+  // Clic en el botón de búsqueda
+  await page.getByRole('button', { name: 'Search (Ctrl+K)' }).click();
+  
+  // Llenar el campo de búsqueda
+  const searchInput = page.getByPlaceholder('Search docs');
+  await searchInput.fill('hascontent');
 
-  await page.getByPlaceholder('Search docs').click();
+  // Activar la búsqueda presionando Enter
+  await searchInput.press('Enter');
 
-  await page.getByPlaceholder('Search docs').fill('hascontent');
+  // Playwright esperará automáticamente a que el elemento sea visible
+  await expect(page.locator('.DocSearch-NoResults p')).toBeVisible();
 
-  expect(page.locator('.DocSearch-NoResults p')).toBeVisible();
-
-  expect(page.locator('.DocSearch-NoResults p')).toHaveText('No results for hascontent');
-
-})
+// Ahora, verifica el texto
+await expect(page.locator('.DocSearch-NoResults p')).toHaveText('No results for "hascontent"');
+});
 
 test('Limpiar el input de busqueda', async ({ page }) => {
   await page.getByRole('button', { name: 'Search' }).click();
@@ -26,7 +31,7 @@ test('Limpiar el input de busqueda', async ({ page }) => {
 
   await searchBox.fill('somerandomtext');
 
-  await expect(searchBox).toHaveText('somerandomtext');
+  await expect(searchBox).toHaveValue('somerandomtext');
 
   await page.getByRole('button', { name: 'Clear the query' }).click();
 
@@ -42,11 +47,10 @@ test('Realizar una busqueda que genere al menos tenga un resultado', async ({ pa
 
   await page.getByPlaceholder('Search docs').fill('havetext');
 
-  expect(searchBox).toHaveText('havetext');
+  expect(searchBox).toHaveValue('havetext');
 
   // Verity there are sections in the results
   await page.locator('.DocSearch-Dropdown-Container section').nth(1).waitFor();
   const numberOfResults = await page.locator('.DocSearch-Dropdown-Container section').count();
   await expect(numberOfResults).toBeGreaterThan(0);
-
 });
